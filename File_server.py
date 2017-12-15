@@ -5,7 +5,9 @@
 import os.path
 import time
 import web
+import logging
 
+import Protocol
 
 class FileServer():
 	# Takes and stores the client files.
@@ -42,10 +44,8 @@ class FileServer():
 def Local_path(file_path):
     return os.path.join(os.getcwd(), _config['fsroot'], file_path[1:])
 
-_config = { 'lockserver' : None,
-	    'nameserver' : None,
-	    'directories' : [],
-	    'fsroot' : 'fs/',
-	    'server' : None
-	  }
+_config = { 'lockserver' : None,'nameserver' : None, 'directories' : [],'fsroot' : 'fs/','server' : None }
+
+logging.info('Loading config file fileserver.dfs.json.')
+Protocol.load_config(_config, 'fileserver.dfs.json')
 

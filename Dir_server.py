@@ -7,6 +7,7 @@ import web ## to operate on web based API
 import shelve
 import logging
 
+import Protocol
 
 class DirServer:
     def GET(self, file_path):
@@ -57,6 +58,7 @@ def UPDATE_PATH(directory, srv, add=True):
         
         
 _config = { 'dbfile' : 'names.db' }
-logging.info('Loading config file nameserver.dfs.json.')
+logging.info('Loading config file DirServer.dfs.json.')
+Protocol.load_config(_config, 'DirServer.dfs.json')
 ## load initial config from each server about the PORT, IP
 _dir = shelve.open(_config['dbfile'])
