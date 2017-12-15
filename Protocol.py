@@ -13,3 +13,6 @@ def load_config(config,file_path):
             c = json.loads(f.read())
             config.update(c)
 
+def get_host(s):
+    host, port = s.split(':')
+    return host, int(port)

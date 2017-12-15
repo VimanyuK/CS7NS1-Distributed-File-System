@@ -6,7 +6,8 @@ import os.path
 import time
 import web
 import logging
-
+from contextlib import closing
+from httplib import HTTPConnection
 import Protocol
 
 class FileServer():
@@ -39,13 +40,24 @@ class FileServer():
         p = Local_path(file_path)
         web.header('Last-Modified', time.ctime(os.path.getmtime(p)))
         return ''
-
-
+        
 def Local_path(file_path):
     return os.path.join(os.getcwd(), _config['fsroot'], file_path[1:])
+
+def init_File_server():
+    host, port = Protocol.get_host(_config['nameserver'])
+    with closing(HTTPConnection(host, port)) as conn:
+        data = 'srv=%s&dirs=%s' % (_config['srv'],
+                                '\n'.join(_config['directories']),)
+        conn.request('POST', '/', data)
+
 
 _config = { 'lockserver' : None,'nameserver' : None, 'directories' : [],'fsroot' : 'fs/','server' : None }
 
 logging.info('Loading config file fileserver.dfs.json.')
 Protocol.load_config(_config, 'fileserver.dfs.json')
+
+init_File_server()
+
+
 
