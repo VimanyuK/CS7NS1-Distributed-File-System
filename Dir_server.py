@@ -5,6 +5,7 @@ File sorting service or a Directory Service which indexes file systems from all 
 import os
 import web ## to operate on web based API 
 import shelve
+import logging
 
 
 class DirServer:
@@ -24,8 +25,38 @@ class DirServer:
         if directory in _dir:
             return _dir[directory]
 
-
+def UPDATE(directory, add=True):
+    """Add pair of directory/server to the name server."""
+    web.header('Content-Type', 'text/plain; charset=UTF-8')
+    i = web.input()
+    srv = i['srv']
+        
+    if directory == '/':
+        if 'dirs' not in i:
+            raise web.badrequest()
+        
+        for directory in i['dirs'].split('\n'):
+            if not directory:
+                UPDATE_PATH(directory, srv, add)
+    else:
+        UPDATE_PATH(directory, srv, add)
+    return 'ok'
+                
+def UPDATE_PATH(directory, srv, add=True):
+     """Just update the name dictionnary and the database"""
+     if directory[-1] == '/':
+         directory = os.path.dirname(directory)
+     if add:
+         logging.info('Update directory %s on %s.', directory, srv)
+         _dir[directory] = srv
+     elif directory in _dir:
+         logging.info('Remove directory %s on %s.', directory, srv)
+         del _dir[directory]
+     else:
+         raise ValueError('%s wasn\'t not deleted!!' %directory)
+        
+        
 _config = { 'dbfile' : 'names.db' }
+logging.info('Loading config file nameserver.dfs.json.')
 ## load initial config from each server about the PORT, IP
-
 _dir = shelve.open(_config['dbfile'])
