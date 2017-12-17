@@ -2,10 +2,12 @@
 ### Service for locking file access so that two clients cannot access a file together
 
 import atexit ## to implement lock closing
+import collections
 import shelve
 import web
 import logging
-
+import random
+import datetime
 import Protocol
 
 class LockServer():
@@ -51,16 +53,41 @@ class LockServer():
                 
 
 def Lock_Expired(file_path):
-    pass
+    last_used = locks[file_path].last_used
+    return (datetime.datetime.now() - last_used).seconds > _config['lock_lifetime']
 
 def New_Lock(file_path):
-    pass
+    if file_path in locks:
+        if not Lock_Expired(file_path):
+            # can't revoke the lock, it's still active
+            print('Unable to grant a new lock (%s).' % file_path)
+
+        Revoke_Lock(file_path)
+
+    else:
+        lock_id = random.randrange(0, 32768)
+        logging.info('Granting lock (%d) on %s.', lock_id, file_path)
+        t = datetime.datetime.now()
+        locks[file_path] = Lock(lock_id, t, t)
+        
+    return lock_id
 
 def Update_Lock(file_path):
-    pass
+    t = datetime.datetime.now()
+    logging.info('Update lock on %s from %s to %s.',file_path, locks[file_path].last_used, t)
+    
+    l =locks[file_path]
+    l = Lock(l.lock_id, l.granted, t)
+    locks[file_path] = l
+
+Lock = collections.namedtuple('Lock', 'lock_id granted last_used')
 
 def Revoke_Lock(file_path):
-    pass
+    if file_path in locks:
+        logging.info('Revoking lock on %s.', file_path)
+        del locks[file_path]
+        
+        
 
 _config = { 'dbfile' : 'locks.db',
 	    'lock_lifetime' : 30
